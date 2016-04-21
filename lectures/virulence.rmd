@@ -1,0 +1,112 @@
+---
+title: "Evolution of virulence"
+author: Ben Bolker
+date:  26 April 2016
+bibliography: ../seminar/virulence.bib
+csl: apa.csl
+output:
+  ioslides_presentation:
+     toc: true
+---
+<!-- 
+apa.csl is a slightly hacked version of APA 
+  (modified for "et al" after 2 authors in text)
+-->
+<!-- .refs is style for reference page (small text) -->
+<style>
+.refs {
+   font-size: 16px;
+}
+.sm_block {
+   font-size: 20px;
+}
+h2 { 
+ color: #3399ff;		
+}
+h3 { 
+ color: #3399ff;		
+}
+.title-slide {
+   background-color: #55bbff;
+}
+</style>
+<!--    content: url(https://i.creativecommons.org/l/by-sa/4.0/88x31.png)
+>
+<!-- Limit image width and height -->
+<style type="text/css">
+img {     
+  max-height: 560px;     
+  max-width: 500px; 
+}
+div#before-column p.forceBreak {
+	break-before: column;
+}
+
+div#after-column p.forceBreak {
+	break-after: column;
+}
+</style>
+
+```{r setup,echo=FALSE,message=FALSE}
+library("ggplot2"); theme_set(theme_classic())
+library("reshape2")
+library("ggExtra")
+library("MASS")
+library("knitr")
+opts_chunk$set(echo=FALSE,fig.width=4,fig.height=4,out.width=400)
+```
+
+# Parasite eco/evo
+
+## Why study parasite eco/evo? {.columns-2}
+
+- cool natural history
+- drive ecological communities
+(Janzen-Connell)
+- interesting ecological systems
+- conservation/wildlife management/agricultural impacts
+- direct effcts on human health
+
+## What is a parasite?
+
+- *natural enemy/victim* interaction
+- close association (symbiosis)
+- doesn't kill host (prolonged interaction)
+
+## Enemy-victim interactions
+
+- mix of positive and negative feedback
+- interesting dynamics
+    - ecology: cycles
+	- evolution: *Red Queen* cycles
+
+## recognition and evasion
+
+- MHC holes?
+
+# Parasite virulence
+
+## History of parasite virulence
+
+- "classical dogma"
+- Ewald era: tradeoff theory (verbal)
+- post-Ewald: tradeoff theory (mathematical)
+- modern: diversity and confusion
+
+## Classical dogma
+
+- parasites evolve to minimize
+- group selectionist
+- anecdotal
+    - syphilis
+
+## Ewald
+
+- importance of modes of transmission
+- direct vs environmental
+    - cholera
+- horizontal vs vertical
+    - needle/sex vs maternal
+
+## References {.refs}
+
