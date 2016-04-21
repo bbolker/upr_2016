@@ -14,5 +14,6 @@
 	Rscript -e "library(\"knitr\"); knit2pdf(\"$<\")"
 
 clean:
-	rm -f *.log *.aux *.md *.out texput.log *.nav *.snm *.toc
+	rm -f *.log *.aux *.md *.out texput.log *.nav *.snm *.toc *.bbl *.blg *.vrb
+
 
