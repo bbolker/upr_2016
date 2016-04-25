@@ -10,6 +10,10 @@
 %.pdf: %.tex
 	pdflatex --interaction=nonstopmode $*
 
+%.tex: %.Rnw
+	Rscript -e "library(\"knitr\"); knit(\"$<\")"
+
+
 %.pdf: %.Rnw
 	Rscript -e "library(\"knitr\"); knit2pdf(\"$<\")"
 

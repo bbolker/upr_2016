@@ -65,7 +65,7 @@
 
 <<setup,echo=FALSE,message=FALSE>>=
 library(knitr)
-opts_chunk$set(echo=FALSE,error=TRUE,
+opts_chunk$set(echo=FALSE,error=FALSE,
                fig.align="center",out.width="0.8\\textwidth",
                fig.width=6,fig.height=4)
 library(deSolve)
@@ -79,9 +79,22 @@ load("data/myxo-virenv.RData")
 load("data/myxoz.RData")
 load("data/paper-virbatch-cv3.RData")
 load("data/grick1.RData")
-source("virulence_funs.R")
+source("R/virulence_funs.R")
 library(ggplot2)
 theme_set(theme_bw())
+library("ggplot2"); theme_set(theme_classic())
+library("MASS")
+## use Dark2 rather than Set1 because colour #6 of Set1 is yellow (ugh/too light)
+scale_colour_discrete <- function(...,palette="Dark2") scale_colour_brewer(...,palette=palette)
+scale_fill_discrete <- function(...,palette="Dark2") scale_fill_brewer(...,palette=palette)
+library("gridExtra")
+library("plyr")  ## for ldply()
+library("dplyr") ## for full_join()
+library("reshape2")  ## for melt()
+library("GGally")
+library("knitr")
+## devtools::install_github("lionel-/ggstance")
+library("ggstance")
 library(scales) ## for squish()
 library(gridExtra) ## for grid.arrange()
 library(mgcv)
@@ -92,7 +105,7 @@ library(splines)  ## for vir asymptote profile
 library(deSolve)
 library(Hmisc)
 library(gsubfn)
-source("WNVfuns_3.R")
+load("data/combine_ev_LHS4.rda")
 @ 
 
 \title[Eco-evolutionary dynamics of virulence]{Eco-evolutionary dynamics of pathogen virulence}
@@ -246,8 +259,9 @@ tmpf <- function(c=5,gamma=1/3) {
           xaxs="i",yaxs="i")
     abline(v=0)
     rect(-1,7,1,10,col="white",border=NA)
-    text("Transmission\nrate",x=0,y=8,xpd=NA)
-    axis(side=1,at=c(-2,0:5),labels=c("mu",0:5))
+    text("transmission\nrate",x=0,y=8,xpd=NA)
+    axis(side=1,at=c(-2,0:5),labels=c("",0:5))
+    mtext(side=1,at=-2,line=par("mgp")[2],expression(mu),cex=1.5)
 }
 tmpf()
 Rcol <- "blue"
@@ -1382,7 +1396,7 @@ text(c(1959.5,1956.2,1953),
 
 \begin{frame}
 \frametitle{Myxomatosis virulence dynamics: realistic tradeoff}
-<<myxosim3,fig>>=
+<<myxosim3>>=
 <<myxosim1>>
 aval <- 0.2
 lines(1950.5+(L1$time/365),L1$alpha/0.006,lwd=2,col=rgb(0,0,0,aval))
@@ -1716,423 +1730,7 @@ gam <- val/(pos*sl)
 c0 <- val*pos^(-1/gam)
 @
 
-\section[Seasonal disease]{Transient virulence and seasonality}
-
-\subsection{Overview}
-\begin{frame}
-\frametitle{Seasonality}
-\begin{itemize}
-\item{Many pathogens fluctuate annually
-  \begin{itemize}
-  \item{Host contact/aggregation patterns}
-  \item{Host (or vector) demography}
-  \item{Climatic effects on transmissibility}
-  \end{itemize}
-}
-\item{Fluctuating incidence = fluctuating selection}
-\item{Seasonal variation \emph{or} latitudinal variation?}
-\end{itemize}
-\end{frame}
-
-\subsection{Toy model}
-
-\begin{frame}
-\frametitle{Toy model}
-
-\begin{multicols}{2}
-\begin{itemize}
-\item Basic Ross-MacDonald vector-host model
-\item Simple vector (mosquito) demography
-\item No host demography
-\item Two pathogen strains
-\end{itemize}
-\columnbreak
-\includegraphics[width=2in]{pix/boxmodel_vec.pdf}
-\end{multicols}
-\end{frame}
-
-<<get_params>>=
-params0L.1 <- transform(params0L,vhratio=50)  ## increase prevalence
-params0L.2 <- transform(params0L.1,v=10/11*mu,mu=mu/11) ## modify case mort
-@
-
-<<find_rsc,echo=FALSE>>=
-find_rsc <- function(params,target,n,interval=c(0,10)) {
-    tmpfun <- function(sc) {
-        rvalue(scale_r(params,sc,n),n)-target
-    }
-    uniroot(tmpfun,interval)$root
-}
-params0L_2str <- nstrainParams(params0L.2,n=2) ## generate a 2-identical-strain version
-S1L <- summary(params0L_2str)
-rsc <- 1.2
-r_target <- S1L[["r"]][1]*rsc
-## exploring the
-##   scvec <- seq(0,100,length=601)
-##   fvec <- sapply(scvec,r_targetfun,params_1mod,n=1,target=r_target)
-##   plot(scvec,fvec,type="l")
-params_c1 <- set_r(params0L_2str,r=r_target,n=1) ## scale
-run_1 <- ode(startfun(params_c1),0:120,w_grad,params_c1)
-## boost R0 for strain 1 by 1.5 (multiply betaM)
-S2L <- summary(params_c2.1 <- scale_R0(params0L_2str,sc=1.5,n=1))
-## Now set the r value for strain 1 back to the baseline value
-## (i.e. the r for strain 2)
-params_c2 <- set_r(params_c2.1,S2L$r[2],1)
-params_c3 <- set_r(set_r(params_c2.1,S2L$r[2],1),
-                   S2L$r[2]*rsc,2)
-run_2 <- ode(startfun(params_c2),0:120,w_grad,params_c2)
-run_3 <- ode(startfun(params_c3),0:120,w_grad,params_c3)
-@
-
-%\begin{frame}
-%\frametitle{Parameters}
-
-<<partab,results="asis",label="partab",eval=FALSE>>=
-sum.list <- lapply(list(params_c1,params_c2,params_c3),summary)
-s.tab <- do.call(rbind,lapply(sum.list,unlist))
-s.tab[,1:2] <- round(s.tab[,1:2],2)
-s.tab[,3:4] <- round(s.tab[,3:4],1)
-colnames(s.tab) <- c("$r_1$","$r_2$","$\\rzeroi{1}$","$\\rzeroi{2}$")
-rownames(s.tab) <- paste("Case",c("I","II","III"))
-latex(s.tab,file="",caption="Summary parameters for simulation cases")
-@
-%\end{frame}
-
-\begin{frame}
-\frametitle{Case I: $r_1>r_2$, equal $\rzero$}
-<<plot_case1,warning=FALSE,fig.width=8>>=
-gfun <- function(r) {
-    do.call(grid.arrange,c(plotfun(r,type="ggplot"),list(nrow=1)))
-}
-gfun(run_1)
-@
-\end{frame}
-
-\begin{frame}
-\frametitle{Case II: $\rzeroi{1}>\rzeroi{2}$, equal $r$}
-<<plot_case2,warning=FALSE,fig.width=8>>=
-gfun(run_2)
-@
-\end{frame}
-
-\begin{frame}
-\frametitle{Case III: $\rzeroi{1}>\rzeroi{2}$, $r_2>r_1$}
-<<plot_case3,warning=FALSE,fig.width=8>>=
-gfun(run_3)
-@
-\end{frame}
-
-\subsection{WNV data}
-
-\begin{frame}
-\frametitle{Titer vs infectiousness}
-<<vircalc,echo=FALSE>>=
-virdat <- read.csv("data/virdat.txt",comment="#")
-## For Tiawsirisup 2005 data (where we have numbers infected, but
-## transmission percentages don't match exactly -- so `glm()` will
-## complain about non-integer numbers of successes), recompute
-## the transmission fraction (**to do**: go back to other 
-## sources ("Turell altjmh","Dohm","Turell_JME") and get $n$
-## values if possible).
-virdat <- mutate(virdat,
-                 n_inf=round(inf/100*n),
-                 n_transmission=round(transmission/100*n),
-                 inf=100*n_inf/n,
-                 transmission=ifelse(is.na(n),transmission,
-                 100*n_transmission/n))
-mprof <- with(virdat,seq(max(transmission),100,length=25))/100
-glm0 <- glm(transmission/100~titer,weight=n,
-            data=virdat,
-            family=binomial)
-mfit <- function(m) {
-    glm(transmission/100~titer,weight=n,
-        data=virdat,
-        family=binomial(link=logit.2asym(0,1-m)),
-        start=coef(glm0))
-}
-fitList <- lapply(mprof,mfit)
-dvec <- sapply(fitList,deviance)
-pp <-  interpSpline(mprof,dvec)
-bb <- backSpline(pp)
-upr.asym <- predict(bb,x=min(dvec)+3.84)$y
-@
-
-<<titer_transm>>=
-ggplot(virdat,aes(x=titer,y=transmission/100,weight=n))+
-    geom_point(aes(colour=source))+
-    geom_smooth(method="glm",
-         method.args=list(family=binomial(link=logit.2asym(0,1-mprof[1]))),
-                fill="blue")+
-    geom_smooth(method="loess",colour="red",alpha=0.2)+
-    scale_y_continuous(limit=c(0,0.75),oob=squish)+
-    labs(y="Transmission probability")+
-    annotate(geom="errorbar",x=max(virdat$titer),
-             ymin=max(virdat$transmission/100),
-             ymax=upr.asym,width=0.25)+
-    annotate(geom="point",x=max(virdat$titer),
-             y=max(virdat$transmission/100))+
-    geom_vline(xintercept=4.5,lty=2)
-@
-\end{frame}
-
-<<coefs>>=
-tv.int <- round(coef(fitList[[1]])["(Intercept)"],1)
-tv.sl  <- round(coef(fitList[[1]])["titer"],2)
-minpred <- predict(fitList[[1]],newdata=data.frame(titer=4.5),"response")
-@
-
-\begin{frame}
-\frametitle{Titer curves (American crows)}
-<<braultfig>>=
-x0 <- read.csv("data/brault_all.csv")
-## to predict infection from titer:
-coefs <- c(intercept=-14.144,slope=2.01)
-prfun <- function(titer)
-    with(as.list(coefs),0.6*plogis(intercept+slope*titer))
-x0 <- mutate(x0,
-             transm=prfun(titer),
-             probinf2=transm*surv)
-## g1 <- ggplot(x0,aes(day,titer,colour=strain))+geom_line()+
-##    scale_colour_discrete(guide=FALSE)+
-##    geom_hline(yintercept=4.5,lty=2)
-g2 <- ggplot(x0,aes(day,probinf2,colour=strain))+geom_line()+
-    ylab("transmission probability")+scale_y_log10()+
-    geom_hline(yintercept=minpred,lty=2)
-g2
-## grid.arrange(g1,g2,nrow=1,widths = unit(c(1,1.5), "null"))
-@
-\end{frame}
-
-%% removed
-<<probhist,eval=FALSE>>=
-par(las=1,bty="l")
-hist(log10(x0$probinf2),col="gray",breaks=15)
-rug(log10(x0$probinf2),col="red")
-abline(v=log10(minpred),col="blue",lwd=2)
-@
-
-
-<<titersum>>=
-minvir <- 3e-3
-x0sum <- ddply(x0,"strain",
-               summarise,
-               source=head(source,1),
-               a2 = mean(probinf2[probinf2>minvir]),
-               infper=sum(probinf2>minvir),
-               casemort=1-tail(surv,1))
-@
-
-%\begin{frame}
-%\frametitle{Transmission vs clearance}
-<<virplot1B,warning=FALSE,eval=FALSE>>=
-(g2 <- ggplot(x0sum,aes(1/infper,a2))+
- geom_text(aes(colour=source,label=strain))+
- scale_x_continuous(limits=c(0,1))+
- stat_function(fun=function(x) 0.7*x^0.5)+
-    labs(x="Clearance rate (1/infectious period)",
-         y="Average transmission rate")+
- scale_colour_brewer(palette="Set1"))
-@
-%\end{frame}
-
-<<sparrow>>=
-spdat <- read.csv("data/brault2011_sparrow_viremia.csv")
-## ggplot(spdat,aes(day,titer,colour=strain))+geom_line()+geom_point()
-spdat <- mutate(spdat,
-             transm=prfun(titer),
-             probinf2=transm*surv)
-spsum <- ddply(spdat,"strain",
-               summarise,
-               a2 = mean(probinf2[probinf2>minvir]),
-               infper=sum(probinf2>minvir),
-               casemort=1-tail(surv,1))
-allsum <- rbind(data.frame(species="sparrow",source="Brault2007",
-                           spsum),
-                data.frame(species="amcrow",x0sum))
-@
-
-
-\begin{frame}
-\frametitle{Transmission vs clearance for WNV}
-<<sparrow_crow2,warning=FALSE,message=FALSE>>=
-## http://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
-gg_color_hue <- function(n) {
-  hues = seq(15, 375, length=n+1)
-  hcl(h=hues, l=65, c=100)[1:n]
-}
-gcols <- gg_color_hue(2)
-(g3 <- ggplot(allsum,aes(1/infper,a2))+
- geom_text(aes(colour=species,label=strain))+
- scale_x_continuous(limits=c(0,1))+
-## stat_function(fun=function(x) 0.7*x^0.5,colour=gcols[2],lty=3)+
-## stat_function(fun=function(x) 0.3*x^0.5,colour=gcols[1],lty=3)+
- labs(x="Clearance rate (1/infectious period)",
-      y="Average transmission rate")+
- scale_colour_brewer(palette="Set1")+
- scale_x_continuous(limits=c(0,1))+
- stat_function(fun=function(x) 0.7*x^0.5))
-@
-\end{frame}
-
-<<calc_grid,cache=TRUE>>=
-clearancevec <- seq(0.1,1,length=51) ## infectious period from 10 days to 1 day
-## we want to specify b (bird -> mosq transm probability) and transform
-##   that to betaB (a1*a2*b = bites/day*fraction of bites*transm prob)
-bvec <- seq(0,0.7,length=51)
-## baseParams = transforms(params_robinX,...)
-rgrid <- rvalue_grid(clearancevec,bvec)
-r0grid <- r0value_grid(clearancevec,bvec)
-@
-
-<<echo=FALSE,eval=FALSE>>=
-par(las=1,bty="l")
-with(rgrid,contour(clearance,beta,r,
-                   xlab="Clearance rate (1/infectious period)",
-                   ylab="Average transmission rate"))
-with(r0grid,contour(clearance,beta,r0,levels=c(1,2,5,10),
-                    col="red",lty=2,add=TRUE))
-@
-
-
-%\begin{frame}
-%\frametitle{lots of species}
-<<komar2,warning=FALSE,eval=FALSE>>=
-Kdat <- read.csv("data/Komar_2003.csv",comment="#",as.is=TRUE)
-Kdat[-1] <- lapply(Kdat[-1],as.numeric)
-mdat <- melt(Kdat,id.vars=1:2)
-vars <- colsplit(mdat$variable,"_",names=c("day","w"))
-vars$day <- as.numeric(gsub("day","",vars$day))
-vars <- na.omit(vars) ## drop duration stuff
-mdat2 <- cbind(mdat[1:525,c("Species","n")],vars,value=mdat$value[1:525])
-mdat3 <- dcast(mdat2,Species+n+day~w)
-## ggplot(mdat3,aes(x=day,y=est))+geom_line(aes(colour=Species))
-kdat2 <- mutate(mdat3,
-                transm=prfun(est),
-                probinf2=transm)
-ksum <- ddply(kdat2,"Species",
-              summarise,
-              a2 = mean(probinf2[probinf2>minvir],na.rm=TRUE),
-              infper=sum(probinf2>minvir,na.rm=TRUE),
-              casemort=NA)
-ksum <- subset(data.frame(rename(ksum,c(Species="species")),
-                   source="Komar2003",strain="NY99"))
-ksum2 <- transform(ksum,
-                   species=factor(ifelse(!species %in% c("American Crow",
-                   "American Robin","House Sparrow","Fish Crow"),
-                   "other",species)))
-levels(ksum2$species) <- c("amcrow","robin","fishcrow","sparrow","other")
-allsum2 <- rbind(allsum,ksum2)
-allsum2$strain2 <- with(allsum2,ifelse(strain=="NY99","NY99","other"))
-ggplot(subset(allsum2,strain=="NY99"),
-       aes(x=1/infper,y=a2,colour=species,shape=source))+
-    scale_colour_manual(values=c("red","blue","purple","cyan","gray"))+
-    geom_point(size=4)+
-    geom_point(data=subset(allsum2,strain!="NY99"),colour="gray")+
-     labs(x="Clearance rate (1/infectious period)",
-      y="Average transmission rate")
-@
-%\end{frame}
-
-\section[Theory vs. data]{More on theory vs. data}
-
-\subsection{Tradeoff curves}
-
-\begin{frame}
-\frametitle{Estimating tradeoff curves}
-\begin{itemize}
-\item Usually \emph{assume} a tradeoff between virulence and transmission
-\item Positive \emph{correlation}
-virulence and transmissibility 
-(or proxies) known from many systems \citepx{LipsitchMoxon1997}
-\item \colemph{shape} of tradeoff curves is largely unknown
-\end{itemize}
-\end{frame}
-
-\begin{frame}
-\frametitle{Malaria \citepx{MackinnonRead1999a,Paul+2004}}
-\begin{center}
-<<maltrade,fig.width=10,fig.height=5>>=
-par(mfrow=c(1,2))
-par(cex=1.5,lwd=2,bty="l",yaxs="i",las=1,mgp=c(2.5,1,0),
-    mar=c(4,4,1,1),font.main=1.5)
-## par(bty="l",las=1)
-## Paul et al:
-with(pauldat,plot(alpha,pct.inf,pch=pchs[treat],ylim=c(0,100),
-     ylab="% mosquitoes infected",xlab="Scaled virulence"))
-title(main=list("Plasmodium gallinaceum",font=4))
-## corner.label("c",cex=1.5)
-jlfit = lm(pct.inf~alpha,data=pauldat)
-jqfit = lm(pct.inf~poly(alpha,2),data=pauldat)
-avec = seq(0,1500,length=200)
-lines(avec,predict(jqfit,newdat=list(alpha=avec)),lty=1)
-legend("bottomleft",
-       pch=pchs,
-       c("low-dose mixed","high-dose mixed",
-         "SL","Thai"),bty="n",cex=0.8)
-##
-with(t5A,plot(maxparas,inf_all,
-              xlab="Maximum parasitemia",
-              ylab="Overall infection (%)"))
-title(main=list("Plasmodium chabaudi",font=4))
-## corner.label("d",cex=1.5)
-lines(newp,ipred)
-abline(L1,lty=2)
-@ 
-\end{center}
-\end{frame}
-
-\begin{frame}
-  \frametitle{\emph{Pasteuria ramosa} \citepx{Jensen+2006}}
-<<jensenfig>>=
-## par(las=1)
-par(cex=1.5,lwd=2,bty="l",yaxs="i",las=1,mgp=c(2,0.5,0),
-    mar=c(4,4,1,1))
-with(jensendat,plot(newalpha1,Spores/Days,xlim=c(0,max(newalpha1)),
-      xlab="Scaled virulence",ylab="",xpd=NA))
-mtext(side=2,line=2.8,expression(paste("Spores/day ",({}%*%10^6))),
-      las=0,cex=1.5)
-newalpha=(1/newdays2)/meanmu
-polygon(c(newalpha,rev(newalpha)),
-        c((vals2$fit-2*vals2$se.fit)/newdays2,rev((vals2$fit+2*vals2$se.fit)/newdays2)),
-        ## col=rgb(0.5,0.5,0.5,0.5),
-        col="gray",
-        border=NA)
-with(jensendat,points(newalpha1,Spores/Days))
-lines(newalpha,vals2$fit/newdays2)
-@
-\end{frame}
-
-%\begin{frame}
-%\frametitle{Tradeoff curve: \emph{Pasteuria ramosa} \citepx{Jensen+2006}}
-<<eval=FALSE,echo=FALSE>>=
-x = read.table("data/jensen-fig.dat")
-names(x) =c("Days","Spores")
-x$Days = round(x$Days)
-x$Spores = pmax(0,x$Spores)
-plot(x$Days,x$Spores)
-g1 = glm(Spores~poly(Days,2),family=quasipoisson,data=x)
-newdays = seq(min(x$Days),max(x$Days),length.out=100)
-vals = predict(g1,newdata=data.frame(Days=newdays),type="response")
-lines(newdays,vals)
-g0 = glm(Spores~Days,family=quasipoisson,data=x)
-## anova(g0,g1,test="F")
-newdays2 = 1/seq(0.001,0.05,length=100)
-vals2 = predict(g1,newdata=data.frame(Days=newdays2),type="response",se.fit=TRUE)
-## mean longevity APPROX 130 days
-meanmu = 1/130
-newalpha1 = (1/x$Days)/meanmu
-@ 
-<<eval=FALSE,fig.height=5>>=
-par(mar=c(5,4,3,1),cex=1.5,lwd=1.5,las=1,bty="l",
-    mgp=c(2.75,1,0))
-plot(newalpha1,x$Spores/x$Days,xlim=c(0,max(newalpha1)),
-     xlab="Scaled virulence",ylab=expression(paste("Spores/day ",({}%*%10^6))))
-newalpha=(1/newdays2)/meanmu
-lines(newalpha,vals2$fit/newdays2)
-matlines(newalpha,(vals2$fit+outer(vals2$se.fit,c(-1,1)))/newdays2,lty=2,
-         col=1)
-@ 
-%\end{frame}
+\section[HIV]{Transient virulence of HIV}
 
 \begin{frame}
   \frametitle{HIV \citepx{Fraser+2007}}
@@ -2165,35 +1763,216 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
 \end{frame}
 
 \begin{frame}
-  \frametitle{HIV dynamics \citepx{shirreff_transmission_2011}}
-
-\begin{center}  
-\includegraphics[width=2.5in]{pix/Shirreff.png}
-\citep{shirreff_transmission_2011,herbeck_hiv_2014}
-\end{center}
-\end{frame}
-
-\begin{frame}
 \frametitle{Phage dynamics \citepx{berngruber_evolution_2013}}
 \includegraphics[width=2in]{pix/berngruber0_A.png}
 \includegraphics[width=2in]{pix/berngruber0_B.png}
 \end{frame}
 
 \begin{frame}
-\frametitle{What about space?}
+  \frametitle{HIV virulence dynamics \citepx{shirreff_transmission_2011}}
 
-\begin{multicols}{2}
 \begin{itemize}
-\item Theory: spatial structure should select for decreased virulence
-\item Experiment: viscosity decreases \colemph{infectivity}
-in \emph{Plodia} \citep{BootsMealor2007}
-\item Are we ready for space?
+\item virulence/transmission from set-point viral load (SPVL)
+\item{\cite{Fraser+2007} : plausible tradeoff observed from Rakai data
+\begin{itemize}
+\item SPVL heritable
+\item correlated with rate of progression to AIDS
+\item correlated with probability (rate) of within-couple transmission
+\end{itemize}
+}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Model results}
+\begin{center}  
+\includegraphics[width=2.5in]{pix/Shirreff.png} \\
+\citep{shirreff_transmission_2011,herbeck_hiv_2014}
+\end{center}
+\end{frame}
+
+\begin{frame}
+\frametitle{\cite{shirreff_transmission_2011}: within-host assumptions}
+
+\begin{itemize}
+\item generally based on Rakai estimates
+\item Normally distributed mutation of SPVL between hosts
+\item Normally distributed phenotypic variation
+\item different infectivity for early, mid, late stages of HIV
+\item tradeoff applies in mid stage: \\
+Hill functions ($x^d/(a+bx^d)$)
+\item Weibull-distributed time in mid stage
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
+\frametitle{\cite{shirreff_transmission_2011} epidemiological assumptions}
+
+\begin{itemize}
+\item implicit partnership-formation model
+$$
+\textrm{foi} = \frac{\beta c}{\beta + c + 1/d}
+$$
+\item derived from ${\cal R}_0$ for an instantaneous-partnership-formation model, e.g. \cite{hollingsworth_hiv1_2008,diekmann_mathematical_2000}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Epidemiological models for HIV \cite{champredon_hiv_2013}}
+
+% -- convert journal.pone.0082906.g001.png -crop 100%x50% output.png--
+
+\includegraphics[width=\textwidth]{champ1.png}
+\end{frame}
+
+\begin{frame}
+\frametitle{Model modifications}
+
+\begin{itemize}
+\item{need to track $\{S,SS,I(\alpha),SI(\alpha),II(\alpha,\alpha')\}$}
+\item{simplifications:
+    \begin{itemize}
+    \item single-stage, exponential infectious period   \\
+      ($\beta =$ time-weighted average of $\beta_1$, $\beta_2(\alpha)$, $\beta_3$)
+    \item no phenotypic variation
+    \end{itemize}
+}
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Model variations}
+
+\begin{itemize}
+\item 6 models:
+    \begin{itemize}
+    \item extra-pair contact (yes/no)  $\times$
+    \item instantaneous partnership formation (yes/no)
+    \end{itemize}
+  \item implicit (Shirreff/Hollingsworth) model
+  \item random-mixing model
+\end{itemize}
+\end{frame}
+
+\begin{frame}
+\frametitle{Latin hypercube sampling}
+
+\begin{itemize}
+\item sample evenly, randomly across (potentially many) uncertain parameters
+\item following \cite{champredon_hiv_2013}, earlier \cite{blower_drugs_1991}
 \end{itemize}
 
-\columnbreak
-\includegraphics[width=0.5\textwidth]{pix/BootsMealor.png}
+\includegraphics{pix/LHScrop.png}
 
-\end{multicols}
+%\href{https://commons.wikimedia.org/wiki/File:LHSsampling.png#/media/File:LHSsampling.png}{User:Saittam, Wikipedia}
+\end{frame}
+
+\begin{frame}
+\frametitle{Details}
+
+\begin{itemize}
+\item $r$ varies widely across parameters/model sets
+\item scale parameters to a common $r$ 
+\item scale both uncoupled and extra-coupled rates relative to within-coupled rate
+\item{response variables:
+  \begin{itemize}
+  \item equilibrium virulence
+  \item peak virulence time (years)
+  \item peak virulence
+  \item relative peak virulence (peak/eq)
+  \end{itemize}
+}
+\end{itemize}
+\end{frame}
+
+<<setup2,echo=FALSE>>=
+orig_sum_labs <- c("peak_time","peak_vir","eq_vir","rel_peak")
+new_sum_labs <- c("peak time","peak virulence","equil virulence","relative peak")
+fixfac2 <- function(x) factor(x,
+                       levels=orig_sum_labs,
+                       labels=new_sum_labs)
+@
+
+<<panel3,cache=TRUE>>=
+for (i in c("","2","3")) 
+    load(sprintf("data/ev_LHS_resS%s.rda",i))
+Ls <- load("data/shirreff_data.rda")
+tvec <- seq(from=1,by = 0.1,length.out=nrow(vir_matS))
+dimnames(vir_matS) <- list(Time=tvec,
+                           run=paste0("$r=",c(0.021,0.042,0.084),"$"))
+
+tmpf <- function(x,...) {
+    ## why isn't value.name working??
+    rename(melt(vir_matS,value.name="Mean.VL",...),
+           Mean.VL=value)
+}
+
+d_littleR_m <- tmpf(vir_matS)
+shirreff_df_m <- subset(res_sum_df,run==1,select=c(run,Time, Mean.VL))
+shirreff_df_m$run <- "Shirreff"
+df_tot <- rbind(shirreff_df_m,d_littleR_m)
+vlab <- "mean virulence ($\\log_{10}$ SPVL)"
+tlab <- "time (years)"
+g1 <- ggplot(df_tot,aes(x=Time,y=Mean.VL,colour=run))+
+    geom_line()+labs(x=tlab,y=vlab)+
+    theme(legend.position=c(0.8,0.2))
+###
+dimnames(vir_matS2) <- list(Time=tvec,
+               run=c("$10^{-3}$", "$10^{-4}$", "$10^{-5}$"))
+g2 <- g1 %+% tmpf(vir_matS2,id.var="Time")
+###
+dimnames(vir_matS3) <- list(Time=tvec,
+                            run=c("$2.5$", "$3$", "$3.5$"))
+g3 <- g1 %+% tmpf(vir_matS3,id.var="Time")
+limits <- c(2.5,4.7)
+breaks <- seq(limits[1],limits[2], by = 0.5)
+afun <- function(label,size=8) {
+    annotate(geom="text",label=label,x=-Inf,y=Inf,
+             size=size,vjust=1,hjust=0)
+}
+g1.y <- g1 + scale_y_continuous(limits = limits, breaks = breaks)+
+    scale_colour_discrete(name="run")+afun("a")
+g2.y <- g2 + scale_y_continuous(limits = limits, breaks = breaks)+
+    scale_colour_discrete(name="$I(0)$")+afun("b")
+g3.y <- g3 + scale_y_continuous(limits = limits, breaks = breaks)+
+        scale_colour_discrete(name="$\\alpha(0)$")+afun("c")
+@ 
+
+\begin{frame}
+\frametitle{Virulence trajectories}
+<<virtraj,echo=FALSE,warning=FALSE>>=
+gg_virtraj <- ggplot(sum_list[["vir_mat"]],
+                     aes(tvec,mean,ymin=lwr,ymax=upr))+
+    geom_line(aes(colour=model,linetype=model),lwd=1.5)+
+    geom_ribbon(aes(fill=model),alpha=0.3)+
+    labs(x="time",y=vlab)+
+    scale_x_continuous(limits=c(0,2500))
+print(gg_virtraj)
+@
+\end{frame}
+
+\begin{frame}
+\frametitle{Univariate distributions}
+
+<<unidist,fig.width=7,out.width="\\textwidth">>=
+sL <- transform(sum_list[["sum_mat"]],rel_peak=peak_vir/eq_vir)
+mL <- melt(sL,id.vars=c("model","run"))
+## horrible hack (but doesn't help); subsample
+## w <- which(mL$model=="random")
+## mLw <- mL[-sample(w,size=length(w)*9/10,replace=FALSE),]
+w <- with(mL,which(model=="random" & variable=="eq_vir"))
+rval <- mean(mL$value[w])
+mLw <- droplevels(mL[-w,])
+mLw$variable <- fixfac2(mLw$variable)
+ggplot(mLw,aes(value,model,fill=model))+
+    geom_violinh(width=1)+
+    facet_wrap(~variable,scale="free_x")+
+    guides(fill=guide_legend(reverse=TRUE))+
+    labs(y="")+
+    geom_point(data=data.frame(model="random",variable="equil virulence",
+                               value=rval),pch=22,size=3,show.legend=FALSE)
+@
 \end{frame}
 
 \subsection{Conclusions}
@@ -2229,6 +2008,56 @@ When we regard theories as tight, real entities and devote ourselves to their an
 \tiny
 \bibliography{virulence}
 \end{frame}
+
+\begin{frame}
+\frametitle{extras}
+\end{frame}
+
+\begin{frame}
+\frametitle{Baseline results}
+<<baseline,dev="tikz">>=
+grid.arrange(g1.y, g2.y, g3.y, nrow=1)
+@
+\end{frame}
+
+\begin{frame}
+\frametitle{Pairs plots}
+
+<<ggpairs_ex,fig.width=7,fig.height=6.5,dev="png">>=
+ggp1 <- ggpairs(sL,
+        mapping = ggplot2::aes(color = model),
+        columns=3:6,
+        lower = list(continuous = wrap("points", alpha = 0.5,size=0.5)),
+        diag = list(continuous = "blankDiag"),
+        upper = list(continuous = "blank"))+
+    theme(panel.margin=grid::unit(0,"lines"))
+## http://stackoverflow.com/questions/14711550/is-there-a-way-to-change-the-color-palette-for-ggallyggpairs-using-ggplot
+## have to change plot one panel at a time
+cbscales <- list(scale_colour_brewer(palette = 'Dark2'),
+                 scale_fill_brewer(palette = 'Dark2'))  ## DRY
+for (row in seq_len(ggp1$nrow))
+    for (col in seq_len(ggp1$ncol))
+        ggp1[row, col] <- ggp1[row, col] + cbscales[[(row==col)+1]]
+## hack to remove top row/right column
+ggp1$nrow <- ggp1$ncol <- 3
+ggp1$plots <- ggp1$plots[c(5:7,9:11,13:15)]
+print(ggp1)
+@
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Sensitivity}
+
+<<corrsum_plot,dev="png",echo=FALSE,fig.width=10,fig.height=6>>=
+ggplot(mL2,aes(LHSval,sumval,colour=model))+
+    geom_point(pch=".",alpha=0.5)+
+    facet_grid(sumvar~LHSvar,scales="free")+
+    geom_smooth(se=FALSE)+labs(x="",y="")
+@
+
+\end{frame}
+
 
 \end{document}
 
