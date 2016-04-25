@@ -53,36 +53,64 @@ library("reshape2")
 library("ggExtra")
 library("MASS")
 library("knitr")
+library("pander")
 opts_chunk$set(echo=FALSE,fig.width=4,fig.height=4,out.width=400)
 ```
 
 # Parasite eco/evo
 
-## Why study parasite eco/evo? {.columns-2}
+## Why study parasite eco/evo? 
 
 - cool natural history
-- drive ecological communities
+- drive ecological communities  
 (Janzen-Connell)
 - interesting ecological systems
-- conservation/wildlife management/agricultural impacts
-- direct effcts on human health
+- conservation/  
+wildlife management/
+agricultural impact
+- human health
 
-## What is a parasite?
+## What is a parasite? {.columns-2}
 
-- *natural enemy/victim* interaction
-- close association (symbiosis)
-- doesn't kill host (prolonged interaction)
+- *natural enemy - victim* interaction
+- close association (*symbiosis*)
+- doesn't kill host   
+(prolonged interaction)
+
+<p forceBreak></p>
+```{r echo=FALSE,results="asis"}
+d <- matrix(c("predator","grazer",
+              "parasitoid","parasite"),
+            byrow=TRUE,nrow=2,
+            dimnames=list(c("non-symbiotic","symbiotic"),
+                          c("kills host","doesn't kill host")))
+pander(d)
+```
 
 ## Enemy-victim interactions
 
 - mix of positive and negative feedback
 - interesting dynamics
     - ecology: cycles
-	- evolution: *Red Queen* cycles
+	- (co)evolution: *Red Queen* cycles
 
-## recognition and evasion
+## chasing the Red Queen:<br>recognition and evasion {.columns-2}
 
-- MHC holes?
+- parasite-driven maintenance of sex
+(Hamilton)
+- clonal replacement
+(Lively)
+- parasite-driven sexual selection?
+(Hamilton-Zuk, Folstad)
+- MHC-based selection
+(Penn and Potts)
+
+<p class="forceBreak"></p>
+
+![](pix/tenniel2bB.png)
+
+-
+
 
 # Parasite virulence
 
@@ -93,20 +121,112 @@ opts_chunk$set(echo=FALSE,fig.width=4,fig.height=4,out.width=400)
 - post-Ewald: tradeoff theory (mathematical)
 - modern: diversity and confusion
 
+## Definition(s) of virulence
+
+- harm to host (= loss of host fitness)
+- ... in a **reference** host
+(what about host $\times$ parasite interaction?)
+- special cases (Day)
+    - case mortality
+	- loss of fecundity (castration)
+	- debilitation
+	- disease-induced mortality **rate**
+- alternate definition in plant epidemiology
+
+## Physiology of virulence
+
+- **why** are parasites virulent, and what connects virulence to between-host dynamics?
+- replication rate/efficiency $\to$ parasite load
+- faster use of host resources (cells/nutrients)
+- immunopathology: virulence connection with **clearance**
+
+(picture?)
+
+## Virulence, resistance, and tolerance
+
+- What about the host?
+
+(Råberg graph)
+(Råberg reference?)
+
 ## Classical dogma
 
-- parasites evolve to minimize
+- parasites evolve to minimize virulence
+- over evolutionary time, become *commensal*
 - group selectionist
-- anecdotal
-    - syphilis
+- anecdotal: sampling bias?
+    - syphilis [@Knell2004]
+	- myxomatosis
+	- virgin-soil epidemics
 
-## Ewald
+## Ewald {.columns-2}
 
+- popularized idea of *virulence management*
 - importance of modes of transmission
 - direct vs environmental
     - cholera
 - horizontal vs vertical
     - needle/sex vs maternal
+
+<p class="forceBreak"></p>
+
+![](pix/ewald.jpg)
+
+## transmission modes
+
+- vertical vs horizontal
+    - sigma virus
+
+## Post-Ewald {.columns-2}
+
+- now "classic" tradeoff theory
+- from verbal to mathematical theory
+
+![](pix/dieckmann_metz.jpg)
+
+## tradeoff theory
+
+- individual, not population, as unit of selection
+- connections to game theory
+- assumed *tradeoff curve*
+
+
+## The modern era
+
+- recognition of greater complexity
+- backlash against simple tradeoff models
+(Ebert and Bull)
+- more within-host dynamics (King, A vB)
+- Price equation (Proulx and Day)
+- host factors
+
+## Short-sighted evolution/<br>Accidental virulence
+
+- dead-end hosts
+(West Nile)
+- spillover hosts
+(bubonic plague)
+- dead-end tissues  
+(meningitis, neuropathy generally)
+
+## Within-host dynamics
+
+- within-host competition increases virulence
+
+## Empirical evidence
+
+- Serial passage experiments
+- Phage experiments
+- Case studies
+
+## Effects of spatial structure
+
+- Theory: spatial structure should select for decreased virulence
+- Experiment: viscosity decreases *infectivity* in meal moths [@BootsMealor2007]
+
+\end{itemize}
+
+# Example
 
 ## References {.refs}
 
