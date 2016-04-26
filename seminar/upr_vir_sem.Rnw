@@ -24,6 +24,7 @@
 \usepackage{graphicx}
 \usepackage{animate}
 \usepackage{arydshln}
+\usepackage[normalem]{ulem}
 \newcommand{\colemph}[1]{{\color{red} \emph{#1}}}
 %\bibliographystyle{shortreflist}
 \bibliographystyle{notitle}
@@ -75,6 +76,15 @@ library(latticeExtra)
 library(emdbook)
 library(nlme)
 library(bbmle)
+library(tikzDevice)
+## http://yihui.name/en/2011/04/produce-authentic-math-formulas-in-r-graphics/
+options(tikzMetricPackages = c( "\\usepackage[utf8]{inputenc}",
+                "\\usepackage[T1]{fontenc}", "\\usetikzlibrary{calc}",
+                "\\usepackage{amssymb}"))
+
+##options(tikzMetricPackages = c("\\usepackage[utf8]{inputenc}",
+##    "\\usepackage[T1]{fontenc}", "\\usetikzlibrary{calc}",
+##    "\\usepackage{amssymb}"))
 load("data/myxo-virenv.RData")
 load("data/myxoz.RData")
 load("data/paper-virbatch-cv3.RData")
@@ -92,7 +102,6 @@ library("plyr")  ## for ldply()
 library("dplyr") ## for full_join()
 library("reshape2")  ## for melt()
 library("GGally")
-library("knitr")
 ## devtools::install_github("lionel-/ggstance")
 library("ggstance")
 library(scales) ## for squish()
@@ -223,7 +232,7 @@ wordcloud(d$word, d$freq)
 \pause
 \item[Ewald era] virulence as an evolved (adaptive) trait.  Tradeoff theory, modes of transmission.
 \pause
-\item[post-Ewald] more formal tradeoff models, mostly based on $R_0$ optimization.  Adaptive dynamics
+\item[post-Ewald] more formal tradeoff models, mostly based on $\rzero$ optimization.  Adaptive dynamics
 \pause
 \item[Now] 
 \begin{itemize}
@@ -428,10 +437,10 @@ curve(2*x^(1/2),add=TRUE,col=4)
 box(bty="l")
 ##axis(side=1,at=c(0,5),label=rep("",2))
 par(xpd=NA)
-text(1.5,4.2,expression(beta(alpha)==c*alpha^{1/gamma}),cex=1.2,xpd=NA)
-text(3.9,3.3,expression(list(c==2,gamma==2)),col=4)
-text(3.6,2.3,expression(list(c==1,gamma==2)),col=1)
-text(3.6,1.2,expression(list(c==1,gamma==3)),col=2)
+text(1.5,4.2,expression(beta(alpha)==c*alpha^{1/gamma}),xpd=NA)
+text(3.9,3.3,expression(list(c==2,gamma==2)),col=4,cex=0.75)
+text(3.6,2.3,expression(list(c==1,gamma==2)),col=1,cex=0.75)
+text(3.6,1.2,expression(list(c==1,gamma==3)),col=2,cex=0.75)
 @ 
 \end{frame}
 
@@ -446,13 +455,13 @@ text(3.6,1.2,expression(list(c==1,gamma==3)),col=2)
 What might explain initially high, but rapidly decreasing,
 virulence of emerging pathogens?
 \begin{itemize}
-\item Pathogens with low virulence go unnoticed
+\item Sampling bias
   \pause
-\item Hosts less resistant to / tolerant of novel parasites 
+\item Lower host resistance/tolerance
   \pause
 \item High transmission $\to$ frequent coinfection $\to$ selection for virulence
 \pause
-\item Disease-induced drop in population density decreases selection for virulence \citep{LenskiMay1994}
+\item Disease-induced decrease in host density $\to$ selection for lowered virulence \citep{LenskiMay1994}
 \end{itemize}
 
 \end{frame}
@@ -463,7 +472,7 @@ Selection differs between the \textbf{epidemic} and \textbf{endemic} phases of a
 \begin{description}
   \pause
 \item[endemic phase] selection for per-generation
-offspring production: maximize $R_0$, $\beta N/(\alpha+\mu)$
+offspring production: maximize $\rzero$, $\beta N/(\alpha+\mu)$
 \pause 
 \item[epidemic phase] selection for per-unit-time offspring production:
 maximize $r$, $\beta N-(\alpha+\mu)$
@@ -498,7 +507,7 @@ it will show a transient peak in virulence as it spreads}
   & scale \\ % & $T^{-1/\gamma}$ \\
 \hdashline
   $\gamma$ & Transmission \\
-  & curvature \\% & --- \\
+  & shape \\% & --- \\
 \hline
   %       &  evolvability & \\
   $I(0)$ & Initial \\ 
@@ -536,7 +545,7 @@ it will show a transient peak in virulence as it spreads}
 
 \begin{frame}
 \frametitle{Example}
-<<sim1>>=
+<<sim1,dev="tikz",cache=TRUE>>=
 params3 = c(h=5,c0=3,m=1,N=1,gamma=2)
 startvals = c(S=0.999,I=0.001,alpha=1)
 L1 = as.data.frame(lsoda(y=startvals,times=seq(0,30,by=0.1),
@@ -553,7 +562,9 @@ box()
 text(7,0.1,adj=0,
      expression(list(V[g]==5,c==3,I(0)==0.001,gamma==2)),cex=0.8)
 text(7,0.06,adj=0,col=4,
-     expression((list(R[0]^"*"==1.5,alpha^"*"==1,N==1000))),cex=0.8)
+     ## "$(\\rzero^*=1.5, a^*=1, N=1000)$")
+     "$(R_0=1.5, a^{*}=1, N=1000)$")
+     ## expression((list(R[0]^"*"==1.5,alpha^"*"==1,N==1000))),cex=0.8)
 par(new=TRUE)
 plot(L1$time,L1$alpha,axes=FALSE,xlab="",ylab="",col=2,type="l")
 axis(side=4,col.axis=2,col=2)
@@ -772,7 +783,7 @@ Order of magnitude estimates for some emerging high-virulence pathogens:
 \vskip10pt
 {\small
 \begin{tabular}{cccl}
-\textbf{Pathogen} &  $R_0^*$ & $\alpha^*$ & \textbf{Reference} \\
+\textbf{Pathogen} &  $\rzero^*$ & $\alpha^*$ & \textbf{Reference} \\
 % $c$ & $\gamma$ & \textbf{Reference} \\
 \hline
 SARS & 3 & 640 & \cite{Anderson+2004} \\ 
@@ -1730,10 +1741,28 @@ gam <- val/(pos*sl)
 c0 <- val*pos^(-1/gam)
 @
 
-\section[HIV]{Transient virulence of HIV}
+\begin{frame}
+\frametitle{Myxomatosis: conclusions}
+
+\begin{itemize}
+\item eco-evo virulence dynamics are at least in the ballpark of what we would expect
+\item detailed shape of virulence curve very important ...
+\item ... as is genetic variance
+\item more realistic models (esp. of variance) needed?
+\end{itemize}
+\end{frame}
 
 \begin{frame}
-  \frametitle{HIV \citepx{Fraser+2007}}
+\frametitle{Phage dynamics \citepx{berngruber_evolution_2013}}
+\includegraphics[width=2in]{pix/berngruber0_A.png}
+\includegraphics[width=2in]{pix/berngruber0_B.png}
+\end{frame}
+
+\section[HIV eco-evo dynamics]{Transient virulence of HIV}
+\subsection{abc}
+
+\begin{frame}
+  \frametitle{HIV tradeoff curve \citepx{Fraser+2007}}
 <<hivfig,fig.width=6,fig.height=6>>=
 par(mar=c(5,4,3,1),cex=1.5,lwd=1.5,las=1,bty="l",
     mgp=c(2.75,1,0))
@@ -1760,12 +1789,6 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
      c("eq","epi"),
      xpd=NA)
 @
-\end{frame}
-
-\begin{frame}
-\frametitle{Phage dynamics \citepx{berngruber_evolution_2013}}
-\includegraphics[width=2in]{pix/berngruber0_A.png}
-\includegraphics[width=2in]{pix/berngruber0_B.png}
 \end{frame}
 
 \begin{frame}
@@ -1819,11 +1842,14 @@ $$
 \end{frame}
 
 \begin{frame}
-\frametitle{Epidemiological models for HIV \cite{champredon_hiv_2013}}
+\frametitle{Epidemiological models for HIV}
 
 % -- convert journal.pone.0082906.g001.png -crop 100%x50% output.png--
 
-\includegraphics[width=\textwidth]{champ1.png}
+\includegraphics[width=\textwidth]{pix/champ1.png}
+
+ \cite{champredon_hiv_2013}
+
 \end{frame}
 
 \begin{frame}
@@ -1858,13 +1884,15 @@ $$
 \begin{frame}
 \frametitle{Latin hypercube sampling}
 
+\begin{multicols}{2}
 \begin{itemize}
 \item sample evenly, randomly across (potentially many) uncertain parameters
 \item following \cite{champredon_hiv_2013}, earlier \cite{blower_drugs_1991}
 \end{itemize}
 
-\includegraphics{pix/LHScrop.png}
-
+\columnbreak
+\includegraphics[width=2in]{pix/LHScrop.png}
+\end{multicols}
 %\href{https://commons.wikimedia.org/wiki/File:LHSsampling.png#/media/File:LHSsampling.png}{User:Saittam, Wikipedia}
 \end{frame}
 
@@ -1913,6 +1941,7 @@ shirreff_df_m <- subset(res_sum_df,run==1,select=c(run,Time, Mean.VL))
 shirreff_df_m$run <- "Shirreff"
 df_tot <- rbind(shirreff_df_m,d_littleR_m)
 vlab <- "mean virulence ($\\log_{10}$ SPVL)"
+vlab <- expression("mean virulence"*(log[10]~"SPVL"))
 tlab <- "time (years)"
 g1 <- ggplot(df_tot,aes(x=Time,y=Mean.VL,colour=run))+
     geom_line()+labs(x=tlab,y=vlab)+
@@ -1940,7 +1969,7 @@ g3.y <- g3 + scale_y_continuous(limits = limits, breaks = breaks)+
 @ 
 
 \begin{frame}
-\frametitle{Virulence trajectories}
+\frametitle{Virulence trajectories (envelopes)}
 <<virtraj,echo=FALSE,warning=FALSE>>=
 gg_virtraj <- ggplot(sum_list[["vir_mat"]],
                      aes(tvec,mean,ymin=lwr,ymax=upr))+
@@ -1975,23 +2004,25 @@ ggplot(mLw,aes(value,model,fill=model))+
 @
 \end{frame}
 
-\subsection{Conclusions}
+\section{Conclusions}
+\subsection{}
 
 \begin{frame}
-\frametitle{Conclusions}
+\frametitle{\sout{Conclusions} Open questions}
 
 \begin{itemize}
 % \item Myxomatosis: reasonable results for
 %   observed $\alpha(t)$, suggest significant (100-200\%) transient
 %   spike in virulence over the first years of the epidemic when
 %   $\alpha(0)= \alpha^*$
-\item Eco-evolutionary dynamics of virulence are still plausible
+\item Eco-evolutionary dynamics is still a reasonable framework
 \citepx{alizon_virulence_2009,luo_navigating_2013}
 %but parameters are very poorly known
 \pause
-\item Sensitive to genetic variance and shape of tradeoff curve
-\item Theory meets molecular biology: \\
+\item need to know: genetic variance, shapes of tradeoffs
+\item theory meets molecular biology: \\
  mutations of large effect vs. quantitative variability
+\item next steps in connecting with data? general theory?
 \end{itemize}
 \end{frame}
 
@@ -2002,11 +2033,14 @@ When we regard theories as tight, real entities and devote ourselves to their an
 \end{quote}
 \end{frame}
 
-
 \begin{frame}
+\begin{multicols}{2}
 \frametitle{References}
-\tiny
+
+% \tiny
+\fontsize{3pt}{5pt}\selectfont
 \bibliography{virulence}
+\end{multicols}
 \end{frame}
 
 \begin{frame}
@@ -2015,7 +2049,7 @@ When we regard theories as tight, real entities and devote ourselves to their an
 
 \begin{frame}
 \frametitle{Baseline results}
-<<baseline,dev="tikz">>=
+<<baseline,dev="tikz",cache=TRUE>>=
 grid.arrange(g1.y, g2.y, g3.y, nrow=1)
 @
 \end{frame}

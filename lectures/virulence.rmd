@@ -15,7 +15,7 @@ apa.csl is a slightly hacked version of APA
 <!-- .refs is style for reference page (small text) -->
 <style>
 .refs {
-    font-size: 14px;
+    font-size: 12px;
     columns: 2 200px;         /* number of columns and width in pixels*/
     -webkit-columns: 2 200px; /* chrome, safari */
     -moz-columns: 2 200px;    /* firefox */
@@ -231,7 +231,7 @@ pander(d)
 - transmission *rate* increases with virulence ...
 - but with diminishing returns
 
-## the tradeoff curve
+## the tradeoff curve {.columns-2}
 
 ```{r tradeoff}
 par(cex=1.5,lwd=2,bty="l",yaxs="i",las=1,mgp=c(2,0.5,0),
@@ -254,6 +254,13 @@ abline(a=2,b=1,col=Rcol)
 abline(a=2*4/3,b=4/3,col=Rcol)
 abline(a=2*5/3,b=5/3,col=Rcol)
 ```
+
+$$
+\begin{split}
+{\mathcal R}_0 & = \frac{\beta(\alpha) N}{\mu+\alpha} \\
+\beta'(\alpha) & = \frac{\beta(\alpha)}{\mu+\alpha}
+\end{split}
+$$
 
 ## other assumptions of tradeoff theory
 
@@ -355,7 +362,7 @@ pchs=c("4+4"=3,"8+8"=17,"SL"=1,"Thai"=15)
 
 - rarely measured
 
-## Malaria
+## malaria
 
 ```{r fig.width=10}
 par(mfrow=c(1,2))
@@ -387,9 +394,13 @@ abline(L1,lty=2)
 
 - @MackinnonRead1999a, @Paul+2004
 - transmission (y-axis) in percent infection
-- virulence proxies: anemia
+- often using virulence *proxies*: anemia
 
-## *Pasteuria ramosa*
+## *Pasteuria ramosa* {.columns-2}
+
+- @Jensen+2006
+- *castrating* parasite   
+(so "host fitness" is decoupled)
 
 ```{r jensenfig}
 ## par(las=1)
@@ -409,9 +420,6 @@ with(jensendat,points(newalpha1,Spores/Days))
 lines(newalpha,vals2$fit/newdays2)
 ```
 
-- [@Jensen+2006]
-- *castrating* parasite   
-(so "host fitness" is decoupled)
  
 ## HIV
 ```{r hivfig,fig.width=6,fig.height=6}
@@ -448,7 +456,7 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
 - effects of imperfect vaccines [@AndreGandon2006]
 - effects of long-lasting stages [@bonhoeffer_curse_1996;@gandon_curse_1998;@kamo_curse_2004]
 
-## The modern era
+## the modern era
 
 - recognition of complexity
 - backlash against simple tradeoff models [@EbertBull2003;@alizon_adaptive_2015]
@@ -488,7 +496,7 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
 
 - theory: spatial structure should select for decreased virulence
 - experiment: viscosity decreases *infectivity* in meal moths [@BootsMealor2007]
-- tradeoffs between virulence and movement will *lower* virulence near the edge of the wave [osnas_evolution_2015]
+- tradeoffs between virulence and movement will *lower* virulence near the edge of the wave [@osnas_evolution_2015]
 
 ## demography
 
@@ -496,8 +504,38 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
 - bottlenecks in parasite transmission [@BergstromMcElhany+1999]
 - effects of epidemic fade-out ("invasion-persistence tradeoff") [@king_evolution_2009]
 
-# outlook
+# outlook and challenges
 
+## parameter estimation
+
+- where do parameters come from?
+    - order-of-magnitude estimates from natural history
+	- ranges plus Latin hypercube sampling
+	- direct measurement
+	- estimation from time series
+
+## model structure
+
+- parasites
+    - "game theoretic" (maximize ${\mathcal R}_0)
+	- adaptive-dynamic (invasibility diagrams)
+    - 2-strain (or few-strain), explicit dynamics
+    - Price equation/quantitative genetic (fixed variance)
+    - many-strain (partial differential equation)
+    - agent-based
+- epidemic structure:
+    - SI(R)(S)	?
+	- frequency- or density-dependent?
+	- vector-borne?
+- hosts
+    - tolerance/resistance genetics?   
+(same choices as above, plus Mendelian options ...)	
+	- demography?
+	- density-dependence?
+	- heterogeneity?
+	- population structure (spatial, age, etc.)?
+	- multi-host community?
+	
 ## where do we go from here?
 
 - alternative approaches?
