@@ -576,6 +576,30 @@ par(op)
 \end{description}
 \end{frame}
 
+
+\begin{frame}
+\frametitle{Laplace-approximation diagnostics}
+
+<<lapl,out.width="0.8\\textwidth",fig.width=6,fig.height=5>>=
+library(lattice)
+aspect <- 0.6
+xlab <- "z"; ylab <- "density"; type <- c("g","l"); scaled <- FALSE
+mm <- readRDS("data/toenail_lapldiag.rds")
+print(xyplot(y ~ zvals|id, data=mm,
+             type=type, aspect=aspect,
+             xlab=xlab,ylab=ylab,
+             as.table=TRUE,
+             panel=function(x,y,...){
+    if (!scaled) {
+        panel.lines(x, dnorm(x), lty=2)
+    } else {
+        panel.abline(h=1, lty=2)
+    }
+    panel.xyplot(x,y,...)
+}))
+@
+\end{frame}
+
 %% \begin{frame}
 %%   \frametitle{Deterministic approaches}
   
@@ -654,7 +678,7 @@ text(rep(1,5),seq(1.6,by=-0.18,length.out=5),
   \end{itemize}
     \end{column}
     \begin{column}{6cm}
-<<hd,out.width="\\textwidth">>=
+<<hd,out.width="\\textwidth",dev="tikz">>=
 ## n <- 200b
 ## d <- data.frame(x=rep(1:2,each=200),
 ##                 y=c(rep(1,n-1),0,rep(0,n-1),1))
@@ -677,6 +701,8 @@ curve(tmpf,from=-15,to=15,axes=FALSE,xlab="parameter",
 box(bty="l")
 hh <- numDeriv::hessian(tmpf,0)
 curve(1+hh*x^2,add=TRUE,lty=2)
+text(c(5.8,2.25),c(0.88,0.4),
+     c("Wald\napprox","likelihood\nprofile"),adj=0)
 @
 \end{column}
   \end{columns}
@@ -812,6 +838,16 @@ trellis.par.set(theme=orig) ## restore settings
 \section{Challenges \& open questions}
 
 \begin{frame}
+\frametitle{On beyond \code{lme4}}
+\begin{itemize}
+\item \code{glmmADMB}, \code{glmmTMB}: zero-inflated and other distributions
+\item \code{brms}, \code{rstanarm}: interfaces to Stan
+\item \code{INLA}: spatial and temporal correlations
+\end{itemize}
+\end{frame}
+
+
+\begin{frame}
 \frametitle{On beyond R}
   \begin{columns}
     \begin{column}{6cm}
@@ -842,7 +878,7 @@ trellis.par.set(theme=orig) ## restore settings
 \item Model diagnosis
 \item Confidence intervals accounting for uncertainty in variances
 \end{itemize}
-See also: \url{http://rpubs.com/bbolker/glmmchapter},
+See also: \url{https://rawgit.com/bbolker/mixedmodels-misc/master/ecostats_chap.html}
 \url{https://groups.nceas.ucsb.edu/non-linear-modeling/projects}
 \end{frame}
 
@@ -888,8 +924,8 @@ but new possibilities on the horizon \citep{Rue+2009,rousset_testing_2014};
   \begin{columns}
     \begin{column}{6cm}
       \begin{itemize}
-        \item \url{http://ms.mcmaster.ca/~bolker/misc/iisc_private/14-Fox-Chap13.pdf}
-        \item \url{http://www.math.mcmaster.ca/bolker/R/misc/foxchapter}
+        \item \url{http://ms.mcmaster.ca/~bolker/misc/private/14-Fox-Chap13.pdf}
+        \item \url{https://rawgit.com/bbolker/mixedmodels-misc/master/ecostats_chap.html}
         \item \cite{bolker_glmm_2014}
       \end{itemize}
     \end{column}
