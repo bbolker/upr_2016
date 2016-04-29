@@ -260,8 +260,6 @@ ggplot(subset(md,Var2!="(Intercept)"),
     coord_flip()
 ```    
 
-## Tundra example
-
 ## Inference
 
 One good way to assess the results of a model fit is to look at a coefficient plot:
@@ -269,6 +267,8 @@ One good way to assess the results of a model fit is to look at a coefficient pl
 ```{r coefplot}
 dwplot(lmer2)+geom_vline(xintercept=0,lty=2)
 ```
+
+(It's usually a good idea to drop the intercept from coefficient plots: the next release of `dwplot` will have a `drop_intercept` parameter that will do this automatically.) For more complicated coefficient plots, you can use the combination of the `broom` package to get the parameters in a useful form and `dwplot` to draw the plot.
 
 Stop and explain to yourself what these parameters mean.  If you're not sure, try resetting the base level of the `roostsitu` factor: `dataf2 <- transform(dataf,roostsitu=relevel(roostsitu,ref="other"))`, predict what will happen to the results, and re-run the analysis.)
 
@@ -364,7 +364,7 @@ mixed(stmass~mnth*roostsitu+(1|subject),data=dataf)
 ```
 - Use `anova()` to do a likelihood ratio test on
 individual pairs of models.
-- Use `drop1()` to 
+- Use `drop1()` to drop terms from the model one at a time
 - `nlme::lme` also gives denominator df
 ```{r lme}
 lme2 <- lme(stmass~mnth*roostsitu,random=~1|subject,data=dataf,
@@ -402,13 +402,6 @@ lm1 <- lm(stmass~mnth*roostsitu,data=dataf)
 (a1 <- anova(lmer2C,lm1))
 ```
 
-This seems reasonable: let's see if we can confirm this result with `RLRsim`.
-
-```{r rlrsim,eval=FALSE}
-library(RLRsim)
-exactRLRT(m=lmer2B)
-```
-
 We can also deduce the number of degrees of freedom from
 standard rules:
 ```{r datatab}
@@ -429,7 +422,7 @@ pf(fvals,numdf,dendf,lower.tail=FALSE)
 
 Alternatively, we can try a parametric bootstrap: the `pbkrtest` package can do this, or we can just set it up by hand:
 
-```{r pboot,cache=TRUE}
+```{r pboot,cache=TRUE,warning=FALSE}
 lmer3 <- lmer(stmass~mnth*roostsitu+(1|subject),data=dataf)
 lmer4 <- lmer(stmass~mnth+roostsitu+(1|subject),data=dataf)
 
@@ -548,6 +541,9 @@ g0 + geom_line(aes(x=as.numeric(mnth),y=mpred1.fit,group=subject),
 
 ### GLMM stuff
 
+- specify `family` ...
+- alternative link functions ...
+- handling overdispersion
 
 ### History
 
