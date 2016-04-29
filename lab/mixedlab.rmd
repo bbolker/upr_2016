@@ -18,7 +18,7 @@ knit_hooks$set(basefig=function(before, options, envir) {
                })
 ```
 
-![cc](../pix/cc-attrib-nc.png)
+![cc](pix/cc-attrib-nc.png)
 <!---
 (http://i.creativecommons.org/l/by-nc-sa/3.0/88x31.png)
 --->
@@ -65,8 +65,8 @@ Data from Toby Marthews, [r-sig-mixed-models mailing list](http://tolstoy.newcas
 
 ```{r starling1,fig.height=4,fig.width=7}
 ## cosmetic tweaks
-load("../data/starling.RData")   ## loads "dataf"
-ggplot(dataf,aes(mnth,stmass))+
+load("data/starling.RData")   ## loads "dataf"
+ggplot(dataf,aes(x=mnth,y=stmass))+
   geom_point()+
   geom_line(aes(group=subject))+  ## connect subjects with a line
   facet_grid(.~roostsitu)+        ## 1 row of panels by roost
@@ -76,17 +76,10 @@ ggplot(dataf,aes(mnth,stmass))+
 You should also try
 ```{r altplot,fig.keep="none"}
 ggplot(dataf,aes(mnth,stmass,colour=roostsitu))+
-  geom_point()+
-  geom_line(aes(group=subject))
+    geom_point()+
+    geom_line(aes(group=subject))
 ```
 for comparison, but I prefer the former plot.
-
-Other alternatives are
-```{r latticeplot,fig.keep="none"}
-library("lattice")
-xyplot(stmass~mnth|roostsitu,data=dataf,
-       type="l",groups=subject,layout=c(4,1))
-```
 
 Overkill for this data set, but sometimes it can be useful to put every individual in its own facet:
 
@@ -220,6 +213,12 @@ function of the fitted values and as a function of particularly important predic
 - the `hatvalues()` function can also be useful (although all hat values are identical here)
 - also see the `influence.ME` package.  Try `plot(influence(lmer2,group="subject"))` and interpret the results ...
 
+### Try it yourself: tundra carbon example
+
+- Download the file `tundra_agg.rda`. The `GS.NEE` records the net ecosystem exchange (in grams of carbon/m^2/year) in a given year and site; `cYear` is a centered version of the year; `n` records the number of observations taken in a given site/year (the NEE value given is an average of these observations).
+- Draw some plots (with `ggplot2` if you can, otherwise with base R graphics) to inspect the data
+- We are interested in the change in NEE over time (i.e., a random-slopes model). Run an `lmer` fit (note this data set does not have the issue of the starling data set), draw some preliminary conclusions, and inspect the plot diagnostics.
+
 ### Analyze with `MCMCglmm`
 
 (optional)
@@ -260,6 +259,8 @@ ggplot(subset(md,Var2!="(Intercept)"),
     geom_hline(yintercept=0,lty=2)+
     coord_flip()
 ```    
+
+## Tundra example
 
 ## Inference
 
@@ -373,7 +374,7 @@ anova(lme2,type="marginal")
 **be careful when doing "marginal"/"type 3" tests in the presence of interactions!**
 Also note that `nlme::lme` gets denominator df calculations wrong for some random-slopes models. If you want to try `lme`'s denominator df calculations without actually fitting the model:
 ```{r calcdendf,}
-source("calcDenDF.R")
+source("R/calcDenDF.R")
 calcDenDF(~roostsitu*mnth,"subject",dataf)
 ```
 
@@ -544,6 +545,9 @@ g0 + geom_line(aes(x=as.numeric(mnth),y=mpred1.fit,group=subject),
                   ymin=mpred1.lwr,ymax=mpred1.upr),fill="blue",
               alpha=0.05)
 ```
+
+### GLMM stuff
+
 
 ### History
 

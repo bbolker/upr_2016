@@ -144,7 +144,7 @@ load("data/combine_ev_LHS4.rda")
 \begin{frame}
 \frametitle{Acknowledgements}
 \begin{description}
-\item[People] Arjun Nanda and Dharmini Shah; Christophe Fraser; Marm Kilpatrick; Anson Wong
+\item[People] Daniel Park; Arjun Nanda and Dharmini Shah; Christophe Fraser; Marm Kilpatrick; Anson Wong
 \item[Support] NSF IRCEB grant 9977063; QSE$^3$ IGERT; NSERC Discovery grant
 \end{description}
 

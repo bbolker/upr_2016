@@ -517,7 +517,7 @@ text(vvals+c(3,0),rep(u2,2),pos=c(2,4),
 ## model structure
 
 - parasites
-    - "game theoretic" (maximize ${\mathcal R}_0)
+    - "game theoretic" (maximize ${\mathcal R}_0$)
 	- adaptive-dynamic (invasibility diagrams)
     - 2-strain (or few-strain), explicit dynamics
     - Price equation/quantitative genetic (fixed variance)

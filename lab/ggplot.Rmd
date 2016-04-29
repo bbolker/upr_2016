@@ -1,0 +1,87 @@
+---
+title: "ggplot basics "
+author: "Ben Bolker"
+date: "29 April 2016"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+* newest R graphics framework
+* based on Wilkinson's ''Grammar of Graphics''
+* documented in a book (see below) and on a [web site](http://had.co.nz/ggplot2), as well as an active [mailing list](http://groups.google.com/group/ggplot2)
+* explicit mapping from variables to ''aesthetics'': x, y, colour, size, shape
+* implements *faceting*
+* some data summaries etc. built in
+* easier to overlay multiple data sets, data summaries, model predictions etc.
+* no 3D plots
+* rendering can be slow
+* `gridExtra`, `directlabels` packages may be handy; also [ggplot extensions](http://www.ggplot2-exts.org/ggalt.html)
+
+## ggplot intro
+
+mappings + geoms
+
+### Data
+
+Specified explicitly as part of a `ggplot` call:
+
+```{r ggplot1,message=FALSE}
+library(mlmRev)
+head(Oxboys)
+library(ggplot2)
+ggplot(Oxboys)
+```
+
+But that isn't quite enough: we need to specify a *mapping* between variables (columns in the data set) and *aesthetics* (elements of the graphical display: x-location, y-location, colour, size, shape ...)
+
+```{r ggplot2}
+ggplot(Oxboys,aes(x=age,y=height))
+```
+
+but (as you can see) that's still not quite enough.  We need to specify some geometric objects (called `geom`s) such as points, lines, etc., that will embody these aesthetics.  The weirdest thing about `ggplot` syntax is that these `geom`s get *added* to the existing `ggplot` object that specifies the data and aesthetics; unless you explicitly specify other aesthetics, they are inherited from the initial `ggplot` call.
+```{r ggplot3}
+ggplot(Oxboys,aes(x=age,y=height))+geom_point()
+```
+
+* many more geoms (lines, bars, etc.)
+* summarizers: smooth lines and summaries (`geom_smooth`, `stat_sum`)
+* control of scales (e.g. log transforms, colors, etc.)
+* faceting (grid and wrap)
+
+See [Karthik's ggplot intro](https://github.com/karthikram/ggplot-lecture) or [my intro for disease ecologists](http://ms.mcmaster.ca/~bolker/eeid/ecology/ggplot.pdf), among many others.
+
+## Techniques for multilevel data
+
+* faceting (= trellis plots = small multiples) vs grouping ("spaghetti plots")
+* join data within a group by lines (perhaps thin/transparent)
+* can colour lines by group (get legend), but more useful for explanatory than presentation graphics
+
+```{r ggplot_mult,fig.keep="none",message=FALSE}
+data("cbpp",package="lme4")
+theme_set(theme_bw())
+## need 'period' variable to be numeric ...
+cbpp2 <- transform(cbpp,period=as.numeric(as.character(period)))
+## base plot
+g0 <- ggplot(cbpp2,aes(period,y=incidence/size))
+g1 <- g0 + geom_line(aes(group=herd))
+## spaghetti plot
+g2 <- g0+geom_line(aes(colour=herd))+
+       geom_point(aes(size=size,colour=herd))
+## facet instead
+(g3 <- g2+facet_wrap(~herd))
+## order by average prop. incidence
+cbpp3 <- transform(cbpp2,herd=reorder(herd,incidence/size))
+g2 %+% cbpp3
+g3 %+% cbpp3
+## also consider colouring by incidence/order ...
+```
+
+Makes it fairly easy to do a simple *two-stage* analysis on the fly:
+```{r ggplot_mult2,fig.keep="none",warning=FALSE}
+g0+geom_point(aes(size=size,colour=herd))+
+    geom_smooth(aes(colour=herd,weight=size),method="glm",
+                method.args=list(family=binomial),se=FALSE)
+```

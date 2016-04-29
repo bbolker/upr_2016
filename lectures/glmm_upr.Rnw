@@ -93,7 +93,7 @@ theme_set(theme_bw())
 \author{Ben Bolker}
 \institute[]{McMaster University, Mathematics \& Statistics and Biology }
 
-\date{29 April 2016}
+\date{28 April 2016}
 % \pgfdeclareimage[height=0.5cm]{uflogo}{letterhdwm}
 % \logo{\pgfuseimage{uflogo}}
  \AtBeginSection[]{
