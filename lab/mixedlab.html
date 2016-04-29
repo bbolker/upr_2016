@@ -110,7 +110,7 @@ $(document).ready(function () {
 
 <h1 class="title">Mixed model lab #1</h1>
 <h4 class="author"><em>Ben Bolker</em></h4>
-<h4 class="date"><em>07:09 29 April 2016</em></h4>
+<h4 class="date"><em>07:12 29 April 2016</em></h4>
 
 </div>
 
@@ -148,7 +148,7 @@ library(&quot;plyr&quot;)</code></pre>
 </div>
 <div id="linear-mixed-model-starling-example" class="section level2">
 <h2>Linear mixed model: starling example</h2>
-<p>Data from Toby Marthews, <a href="http://tolstoy.newcastle.edu.au/R/e13/help/11/01/1364.html">r-sig-mixed-models mailing list</a>:</p>
+<p>Data from Toby Marthews, <a href="http://tolstoy.newcastle.edu.au/R/e13/help/11/01/1364.html">r-sig-mixed-models mailing list</a>: you can find it <a href="https://github.com/bbolker/upr_2016/tree/master/lab/data">here</a>.</p>
 <div id="graphics-spaghetti-plots" class="section level3">
 <h3>Graphics: spaghetti plots</h3>
 <pre class="r"><code>## cosmetic tweaks
@@ -253,7 +253,7 @@ ggplot(dataf,aes(mnth,stmass,colour=roostsitu,group=subject))+
 <div id="try-it-yourself-tundra-carbon-example" class="section level3">
 <h3>Try it yourself: tundra carbon example</h3>
 <ul>
-<li>Download the file <code>tundra_agg.rda</code>. The <code>GS.NEE</code> records the net ecosystem exchange (in grams of carbon/m^2/year) in a given year and site; <code>cYear</code> is a centered version of the year; <code>n</code> records the number of observations taken in a given site/year (the NEE value given is an average of these observations).</li>
+<li>Download the file <code>tundra_agg.rda</code> (from the data directory given above). The <code>GS.NEE</code> records the net ecosystem exchange (in grams of carbon/m^2/year) in a given year and site; <code>cYear</code> is a centered version of the year; <code>n</code> records the number of observations taken in a given site/year (the NEE value given is an average of these observations).</li>
 <li>Draw some plots (with <code>ggplot2</code> if you can, otherwise with base R graphics) to inspect the data</li>
 <li>We are interested in the change in NEE over time (i.e., a random-slopes model). Run an <code>lmer</code> fit (note this data set does not have the issue of the starling data set), draw some preliminary conclusions, and inspect the plot diagnostics.</li>
 </ul>
@@ -454,7 +454,7 @@ abline(v=obsval,col=2,lwd=2)</code></pre>
 <pre><code>## [1] 0.007</code></pre>
 <pre class="r"><code>library(pbkrtest)
 KRmodcomp(lmer3,lmer4)</code></pre>
-<pre><code>## F-test with Kenward-Roger approximation; computing time: 0.05 sec.
+<pre><code>## F-test with Kenward-Roger approximation; computing time: 0.06 sec.
 ## large : stmass ~ mnth * roostsitu + (1 | subject)
 ## small : stmass ~ mnth + roostsitu + (1 | subject)
 ##          stat     ndf     ddf F.scaling p.value
@@ -490,29 +490,29 @@ g0 +   geom_line(colour=&quot;gray&quot;,aes(y=pred1,group=subject)) +
 ##  Thinning interval  = 10
 ##  Sample size  = 1000 
 ## 
-##  DIC: 466.8552 
+##  DIC: 466.8707 
 ## 
 ##  G-structure:  ~subject
 ## 
-##         post.mean  l-95% CI u-95% CI eff.samp
-## subject    0.1377 1.631e-16   0.8311    19.03
+##         post.mean  l-95% CI  u-95% CI eff.samp
+## subject 1.729e-05 9.302e-17 6.855e-05    228.2
 ## 
 ##  R-structure:  ~units
 ## 
 ##       post.mean l-95% CI u-95% CI eff.samp
-## units     18.14    12.59    23.98     1000
+## units     18.18    12.84    24.15    775.1
 ## 
 ##  Location effects: stmass ~ mnth * roostsitu 
 ## 
 ##                           post.mean l-95% CI u-95% CI eff.samp  pMCMC    
-## (Intercept)                 83.5337  80.8464  86.1359     1000 &lt;0.001 ***
-## mnthJan                      7.2807   3.7432  11.1612     1000 &lt;0.001 ***
-## roostsitunest-box           -4.2033  -8.1067  -0.4218     1000  0.034 *  
-## roostsituinside             -4.8540  -8.5143  -1.2138     1000  0.008 ** 
-## roostsituother              -8.2011 -11.9481  -4.3195     1000 &lt;0.001 ***
-## mnthJan:roostsitunest-box    3.5751  -1.6330   8.9237     1000  0.188    
-## mnthJan:roostsituinside      2.2219  -2.8731   6.9865     1000  0.402    
-## mnthJan:roostsituother       1.5377  -3.2141   6.9804     1000  0.584    
+## (Intercept)                 83.5977  80.9813  86.1871    805.4 &lt;0.001 ***
+## mnthJan                      7.2230   3.1954  10.4924   1000.0 &lt;0.001 ***
+## roostsitunest-box           -4.2582  -8.1086  -0.6269   1000.0  0.022 *  
+## roostsituinside             -4.9430  -8.8462  -1.2175   1000.0  0.012 *  
+## roostsituother              -8.2557 -12.2054  -4.6783   1042.2 &lt;0.001 ***
+## mnthJan:roostsitunest-box    3.6760  -1.5552   9.0938    861.2  0.148    
+## mnthJan:roostsituinside      2.2303  -2.8774   7.5900   1000.0  0.426    
+## mnthJan:roostsituother       1.6891  -3.4373   7.2645   1000.0  0.572    
 ## ---
 ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
 <p>MCMCglmm makes it a little bit easier to get confidence intervals on the predictions. The <code>marginal</code> argument specifies which random effects we want the predictions to “marginalise” (i.e., average over). The default is to use all of the random effects in the original model (i.e. <code>~subject</code> in this case), i.e. to predict the average population-level outcome. The approach taken below to get the subject-level predictions (i.e. marginalise over nothing, since <code>subject</code> is the only random effect) is a bit of a hack: this may be easier in future versions.</p>

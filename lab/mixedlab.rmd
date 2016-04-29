@@ -59,7 +59,7 @@ library("plyr")
 
 ## Linear mixed model: starling example
 
-Data from Toby Marthews, [r-sig-mixed-models mailing list](http://tolstoy.newcastle.edu.au/R/e13/help/11/01/1364.html):
+Data from Toby Marthews, [r-sig-mixed-models mailing list](http://tolstoy.newcastle.edu.au/R/e13/help/11/01/1364.html): you can find it [here](https://github.com/bbolker/upr_2016/tree/master/lab/data).
 
 ### Graphics: spaghetti plots
 
@@ -215,7 +215,7 @@ function of the fitted values and as a function of particularly important predic
 
 ### Try it yourself: tundra carbon example
 
-- Download the file `tundra_agg.rda`. The `GS.NEE` records the net ecosystem exchange (in grams of carbon/m^2/year) in a given year and site; `cYear` is a centered version of the year; `n` records the number of observations taken in a given site/year (the NEE value given is an average of these observations).
+- Download the file `tundra_agg.rda` (from the data directory given above). The `GS.NEE` records the net ecosystem exchange (in grams of carbon/m^2/year) in a given year and site; `cYear` is a centered version of the year; `n` records the number of observations taken in a given site/year (the NEE value given is an average of these observations).
 - Draw some plots (with `ggplot2` if you can, otherwise with base R graphics) to inspect the data
 - We are interested in the change in NEE over time (i.e., a random-slopes model). Run an `lmer` fit (note this data set does not have the issue of the starling data set), draw some preliminary conclusions, and inspect the plot diagnostics.
 
