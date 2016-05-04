@@ -63,7 +63,8 @@ See [Karthik's ggplot intro](https://github.com/karthikram/ggplot-lecture) or [m
 data("cbpp",package="lme4")
 theme_set(theme_bw())
 ## need 'period' variable to be numeric ...
-cbpp2 <- transform(cbpp,period=as.numeric(as.character(period)))
+cbpp2 <- transform(cbpp,
+              period=as.numeric(as.character(period)))
 ## base plot
 g0 <- ggplot(cbpp2,aes(period,y=incidence/size))
 g1 <- g0 + geom_line(aes(group=herd))
@@ -82,6 +83,16 @@ g3 %+% cbpp3
 Makes it fairly easy to do a simple *two-stage* analysis on the fly:
 ```{r ggplot_mult2,fig.keep="none",warning=FALSE}
 g0+geom_point(aes(size=size,colour=herd))+
-    geom_smooth(aes(colour=herd,weight=size),method="glm",
-                method.args=list(family=binomial),se=FALSE)
+    geom_smooth(aes(colour=herd,weight=size),
+                 method="glm",
+                method.args=list(family=binomial))
 ```
+
+```{r}
+library(lme4)
+glm(cbind(incidence,size-incidence)~herd)
+
+
+lmList(incidence/size~period|herd,
+       data=subset(cbpp,herd!="8"),
+       weights=size,family=binomial)
